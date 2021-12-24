@@ -24,6 +24,7 @@ import java.util.IntSummaryStatistics;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 public class Main {
@@ -31,9 +32,11 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
 
-        final Path path = Paths.get("mondial.xml");
+        final String filename = "mondial.xml";
+        final Path path = Paths.get(filename);
         try {
-            System.out.println("size=" + Files.size(path));
+            System.out.println("File name=" + filename + " size=" + String.format(Locale.US, "%,d", Files.size(path)) + "B");
+            System.out.println();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -82,8 +85,6 @@ public class Main {
             System.out.println("##############################");
             System.out.println();
         }
-
-
     }
 
     private void doIt(Path path, XMLInputFactory xif, XMLEventFactory xef, XMLOutputFactory xof) {
@@ -107,19 +108,22 @@ public class Main {
                 }
             }
 
+            final long filesize = Files.size(path);
+
             final IntSummaryStatistics eventStats = eventDurations.stream().collect(Collectors.summarizingInt(Long::intValue));
-            printStats("Events", eventStats);
+            printStats("Events", eventStats, filesize);
 
             final IntSummaryStatistics streamStats = streamDurations.stream().collect(Collectors.summarizingInt(Long::intValue));
-            printStats("Streams", streamStats);
+            printStats("Streams", streamStats, filesize);
 
         } catch (Throwable t) {
             t.printStackTrace();
         }
     }
 
-    private static void printStats(String title, IntSummaryStatistics eventStats) {
-        System.out.println(title + " avg=" + eventStats.getAverage() + " min=" + eventStats.getMin() + " max=" + eventStats.getMax());
+    private static void printStats(String title, IntSummaryStatistics eventStats, long filesize) {
+        System.out.println(title + " avgSpeed=" + String.format(Locale.US, "%,.2f", (filesize / eventStats.getAverage() / 1000)) + "MB/s avgDuration="
+                + eventStats.getAverage() + "ms minDuration=" + eventStats.getMin() + "ms maxDuration=" + eventStats.getMax() + "ms");
     }
 
 
